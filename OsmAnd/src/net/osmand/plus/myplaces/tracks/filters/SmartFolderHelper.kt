@@ -13,27 +13,25 @@ import net.osmand.util.Algorithms
 import java.util.Date
 
 class SmartFolderHelper(val app: OsmandApplication) {
-	private val LOG = PlatformUtil.getLog(SmartFolderHelper::class.java)
 
-	private val preference: CommonPreference<String>
-	private val gson: Gson
+	private val preference: CommonPreference<String> =
+		app.settings.registerStringPreference(TRACK_FILTERS_SETTINGS_PREF, "")
+			.makeGlobal()
+			.makeShared()
+	private val gson: Gson = GsonBuilder()
+		.excludeFieldsWithoutExposeAnnotation()
+		.create()
 
 	private val smartFolderCollection: MutableList<SmartFolder> = ArrayList()
 	private val allAvailableTrackItems = HashSet<TrackItem>()
-	private val allAvailableFolders = HashSet<String>()
 	private val updateListeners = ArrayList<SmartFolderUpdateListener>()
 
 	companion object {
+		private val LOG = PlatformUtil.getLog(SmartFolderHelper::class.java)
 		private const val TRACK_FILTERS_SETTINGS_PREF = "track_filters_settings_pref"
 	}
 
 	init {
-		gson = GsonBuilder()
-			.excludeFieldsWithoutExposeAnnotation()
-			.create()
-		preference = app.settings.registerStringPreference(TRACK_FILTERS_SETTINGS_PREF, "")
-			.makeGlobal()
-			.makeShared()
 		readSettings()
 	}
 
@@ -46,7 +44,7 @@ class SmartFolderHelper(val app: OsmandApplication) {
 					smartFolder.filters?.let {
 						val newFilters: MutableList<BaseTrackFilter> = mutableListOf()
 						for (filter in it) {
-							var newFilter =
+							val newFilter =
 								TrackFiltersHelper.createFilter(app, filter.filterType, null)
 							newFilter.initWithValue(filter)
 							newFilters.add(newFilter)
@@ -65,8 +63,8 @@ class SmartFolderHelper(val app: OsmandApplication) {
 		}
 	}
 
-	fun getEnabledFilters(filters: MutableList<BaseTrackFilter>?): ArrayList<BaseTrackFilter> {
-		var enabledFilters = ArrayList<BaseTrackFilter>()
+	private fun getEnabledFilters(filters: MutableList<BaseTrackFilter>?): ArrayList<BaseTrackFilter> {
+		val enabledFilters = ArrayList<BaseTrackFilter>()
 		filters?.let {
 			for (filter in filters) {
 				if (filter.isEnabled()) {
@@ -78,7 +76,7 @@ class SmartFolderHelper(val app: OsmandApplication) {
 	}
 
 	fun saveSmartFolder(smartFolder: SmartFolder, filters: MutableList<BaseTrackFilter>?) {
-		var enabledFilters = getEnabledFilters(filters)
+		val enabledFilters = getEnabledFilters(filters)
 		smartFolder.filters = enabledFilters
 		writeSettings()
 		updateSmartFolderItems(smartFolder)
@@ -86,7 +84,7 @@ class SmartFolderHelper(val app: OsmandApplication) {
 	}
 
 	fun saveNewSmartFolder(name: String, filters: MutableList<BaseTrackFilter>?) {
-		var enabledFilters = getEnabledFilters(filters)
+		val enabledFilters = getEnabledFilters(filters)
 		val newFolder = SmartFolder(name)
 		newFolder.creationTime = Date().time
 		newFolder.filters = enabledFilters
@@ -128,16 +126,15 @@ class SmartFolderHelper(val app: OsmandApplication) {
 
 	fun addUpdateListener(listener: SmartFolderUpdateListener) {
 		if (!updateListeners.contains(listener)) {
-			updateListeners.add(listener)
+			Algorithms.addToList(updateListeners, listener)
 		}
 	}
 
 	fun removeUpdateListener(listener: SmartFolderUpdateListener) {
 		if (updateListeners.contains(listener)) {
-			updateListeners.remove(listener)
+			Algorithms.removeFromList(updateListeners, listener)
 		}
 	}
-
 
 	private fun writeSettings() {
 		val json = gson.toJson(smartFolderCollection)
@@ -146,18 +143,6 @@ class SmartFolderHelper(val app: OsmandApplication) {
 
 	fun isSmartFolderPresent(name: String): Boolean {
 		return getSmartFolderByName(name) != null
-	}
-
-	fun addAvailableTrackFolder(folderName: String) {
-		if (!Algorithms.isEmpty(folderName)) {
-			allAvailableFolders.add(folderName)
-		}
-	}
-
-	fun getAvailableFolders(): Set<String> {
-		val items = HashSet<String>()
-		items.addAll(allAvailableFolders)
-		return items
 	}
 
 	fun addTrackItemToSmartFolder(item: TrackItem) {
@@ -193,18 +178,14 @@ class SmartFolderHelper(val app: OsmandApplication) {
 	}
 
 	fun getSmartFolders(): MutableList<SmartFolder> {
-		val smartFolders = ArrayList<SmartFolder>()
-		smartFolders.addAll(smartFolderCollection)
-		return smartFolderCollection
+		return ArrayList(smartFolderCollection)
 	}
-
 
 	fun renameSmartFolder(smartFolder: SmartFolder, newName: String) {
 		smartFolder.folderName = newName
 		writeSettings()
 		notifyFolderRenamedListeners(smartFolder)
 	}
-
 
 	fun deleteSmartFolder(smartFolder: SmartFolder) {
 		smartFolderCollection.remove(smartFolder)
@@ -251,8 +232,6 @@ class SmartFolderHelper(val app: OsmandApplication) {
 	}
 
 	fun getAllAvailableTrackItems(): HashSet<TrackItem> {
-		val items = HashSet<TrackItem>()
-		items.addAll(allAvailableTrackItems)
-		return items
+		return HashSet(allAvailableTrackItems)
 	}
 }
