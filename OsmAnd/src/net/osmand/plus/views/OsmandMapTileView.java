@@ -1404,43 +1404,17 @@ public class OsmandMapTileView implements IMapDownloaderCallback {
 			PointF secondPoint = multiTouchSupport.getSecondPoint();
 			PointI secondPosition = new PointI((int) secondPoint.x, (int) secondPoint.y);
 			PointD zoomAndRotation = new PointD();
-			boolean canChange = mapRenderer.getZoomAndRotationAfterPinch(
+			boolean canChange = mapRenderer.getTiltAndRotationAfterMove(
 					new PointI(firstTouchLocationX, firstTouchLocationY), firstTouchLocationHeight, firstPosition,
 					new PointI(secondTouchLocationX, secondTouchLocationY), secondTouchLocationHeight, secondPosition,
 					zoomAndRotation);
 			if (canChange) {
 				if (startZooming) {
-					float relativeZoomAnimation = (float) zoomAndRotation.getX();
-					int flatZoomLevel = mapRenderer.getFlatZoomLevel().ordinal();
-					float flatVisualZoom = mapRenderer.getFlatVisualZoom();
-					float flatZoomFloatPart = flatVisualZoom >= 1.0f
-							? flatVisualZoom - 1.0f
-							: (flatVisualZoom - 1.0f) * 2.0f;
-					Zoom zoom = new Zoom(flatZoomLevel, flatZoomFloatPart, getMinZoom(), getMaxZoom());
-					zoom.calculateAnimatedZoom(flatZoomLevel, relativeZoomAnimation);
-					int zoomLevel = zoom.getBaseZoom();
-					double zoomAnimation = zoom.getZoomAnimation();
-					double zoomFloatPart = zoom.getZoomFloatPart();
-
-					float finalZoomFloatPart = (float) (zoomAnimation + zoomFloatPart);
-					float visualZoom = finalZoomFloatPart >= 0
-							? 1 + finalZoomFloatPart
-							: 1 + 0.5f * finalZoomFloatPart;
-					mapRenderer.setFlatZoom(ZoomLevel.swigToEnum(zoomLevel), visualZoom);
-					float zoomMagnifier = application.getOsmandMap().getMapDensity();
-					mapRenderer.setVisualZoomShift(zoomMagnifier - 1.0f);
-
-					int surfaceZoomLevel = mapRenderer.getZoomLevel().ordinal();
-					float surfaceVisualZoom = mapRenderer.getVisualZoom();
-					float surfaceZoomFloatPart = surfaceVisualZoom >= 1.0f
-							? surfaceVisualZoom - 1.0f
-							: (surfaceVisualZoom - 1.0f) * 2.0f;
-
-					currentViewport.setZoomAndAnimation(surfaceZoomLevel, zoomAnimation, surfaceZoomFloatPart);
+					mapRenderer.setElevationAngle((float) zoomAndRotation.getX());
 				}
 				if (startRotating) {
-					float angleShift = (float) zoomAndRotation.getY();
-					this.rotate = MapUtils.unifyRotationTo360(this.rotate - angleShift);
+					float rotationAngle = (float) zoomAndRotation.getY();
+					this.rotate = MapUtils.unifyRotationTo360(-rotationAngle);
 					mapRenderer.setAzimuth(-this.rotate);
 					currentViewport.setRotate(this.rotate);
 				}
