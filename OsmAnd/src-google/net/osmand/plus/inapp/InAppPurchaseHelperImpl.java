@@ -421,7 +421,9 @@ public class InAppPurchaseHelperImpl extends InAppPurchaseHelper {
 				boolean subscribedToOsmAndPro = false;
 				boolean subscribedToMaps = false;
 				List<Purchase> subscriptionPurchases = new ArrayList<>();
+				logDebug("check purchase");
 				for (InAppSubscription s : getSubscriptions().getAllSubscriptions()) {
+					logDebug("purchase " + s.getFeatureId() + ", sku " + s.getSku() + ", active " + s.getState().isActive());
 					Purchase purchase = getPurchase(s.getSku());
 					if (purchase != null || s.getState().isActive()) {
 						if (purchase != null) {
