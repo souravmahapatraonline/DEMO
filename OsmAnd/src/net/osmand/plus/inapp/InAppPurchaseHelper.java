@@ -219,7 +219,9 @@ public abstract class InAppPurchaseHelper {
 		List<InAppPurchase> purchases = new ArrayList<>(getEverMadeSubscriptions());
 		// Add full version if it is purchased or available by default
 		InAppPurchase fullVersion = getFullVersion();
+		logDebug("getFullVersion " + fullVersion);
 		if (fullVersion != null) {
+			logDebug("full " + Version.isFullVersion(ctx) + ", isDev " + Version.isDeveloperBuild(ctx));
 			boolean isFullVersionByDefault = Version.isFullVersion(ctx) && !Version.isDeveloperBuild(ctx);
 			if (fullVersion.isPurchased() || isFullVersionByDefault) {
 				purchases.add(fullVersion);
