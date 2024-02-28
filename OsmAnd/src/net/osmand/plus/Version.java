@@ -160,7 +160,7 @@ public class Version {
 	}
 
 	public static boolean isDeveloperVersion(@NonNull OsmandApplication app) {
-		return getAppName(app).contains("~") || app.getPackageName().equals(FREE_DEV_VERSION_NAME) || true;
+		return( getAppName(app).contains("~") || app.getPackageName().equals(FREE_DEV_VERSION_NAME)) && false;
 	}
 
 	public static boolean isDeveloperBuild(@NonNull OsmandApplication app) {
