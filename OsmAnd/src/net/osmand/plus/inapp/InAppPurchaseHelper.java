@@ -190,6 +190,7 @@ public abstract class InAppPurchaseHelper {
 	public InAppPurchaseHelper(OsmandApplication ctx) {
 		this.ctx = ctx;
 		isDeveloperVersion = Version.isDeveloperVersion(ctx);
+		logDebug("isDeveloper version = " + isDeveloperVersion);
 	}
 
 	@NonNull
