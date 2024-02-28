@@ -281,6 +281,8 @@ public abstract class InAppPurchaseHelper {
 	}
 
 	protected void exec(@NonNull InAppPurchaseTaskType taskType, @NonNull InAppCommand command) {
+		logDebug("exec isDev = " + isDeveloperVersion + ", isGP = " + Version.isGooglePlayEnabled() +
+				", isHW = " + Version.isHuawei() +", isAm = " + Version.isAmazon());
 		if (isDeveloperVersion || (!Version.isGooglePlayEnabled() && !Version.isHuawei() && !Version.isAmazon())) {
 			notifyDismissProgress(taskType);
 			stop(true);
@@ -313,6 +315,7 @@ public abstract class InAppPurchaseHelper {
 			execImpl(taskType, command);
 		} catch (Exception e) {
 			logError("exec Error", e);
+			logDebug("exec Error");
 			stop(true);
 		}
 	}
@@ -393,7 +396,8 @@ public abstract class InAppPurchaseHelper {
 				exec(InAppPurchaseTaskType.PURCHASE_SUBSCRIPTION, getPurchaseSubscriptionCommand(activity, sku, null));
 				return;
 			}
-			logDebug("Response=" + response);
+
+			logDebug("Response1=" + response);
 			if (response == null) {
 				if (!Algorithms.isEmpty(userId)) {
 					if (Algorithms.isEmpty(token)) {
@@ -481,7 +485,7 @@ public abstract class InAppPurchaseHelper {
 
 		@Override
 		protected void onPostExecute(String[] response) {
-			logDebug("Response=" + Arrays.toString(response));
+			logDebug("Response2=" + Arrays.toString(response));
 			String activeSubscriptionsIdsJson = response[0];
 			String subscriptionsStateJson = response[1];
 			if (activeSubscriptionsIdsJson != null) {
@@ -819,7 +823,7 @@ public abstract class InAppPurchaseHelper {
 	protected abstract void destroyBillingManager();
 
 	protected void stop(boolean taskDone) {
-		logDebug("Destroying helper.");
+		logDebug("Destroying helper. task done = " + taskDone);
 		if (isBillingManagerExists()) {
 			if (taskDone) {
 				processingTask = false;
