@@ -58,7 +58,7 @@ public class PlatformUtil {
 		@Override
 		public void debug(Object message) {
 			message += getCurrentThreadName();
-			if(isDebugEnabled()){
+			if(true || isDebugEnabled()){
 				android.util.Log.d(TAG, name + " " + message); //$NON-NLS-1$
 			}
 		}

@@ -3,6 +3,7 @@ package net.osmand.plus.inapp.util;
 import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -102,6 +103,7 @@ public class BillingManager implements PurchasesUpdatedListener {
 
 	public BillingManager(@NonNull Context context, @NonNull String base64PublicKey,
 	                      @NonNull BillingUpdatesListener updatesListener) {
+		Log.d("BillingManager", "Creating Billing client. new");
 		LOG.debug("Creating Billing client.");
 		mContext = context;
 		mSignatureBase64 = base64PublicKey;
@@ -287,6 +289,7 @@ public class BillingManager implements PurchasesUpdatedListener {
 	 * @param purchase Purchase to be handled
 	 */
 	private void handlePurchase(Purchase purchase) {
+
 		if (!verifyValidSignature(purchase.getOriginalJson(), purchase.getSignature())) {
 			LOG.info("Got a purchase: " + purchase + ", but signature is bad. Skipping...");
 			return;
