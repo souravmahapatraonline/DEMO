@@ -378,6 +378,7 @@ public class InAppPurchaseHelperImpl extends InAppPurchaseHelper {
 				}
 
 				InAppPurchase fullVersion = getFullVersion();
+				logDebug("getFullVersion() " + fullVersion + ", hasDetails " + hasDetails(fullVersion.getSku()));
 				if (hasDetails(fullVersion.getSku())) {
 					Purchase purchase = getPurchase(fullVersion.getSku());
 					ProductDetails fullPriceDetails = getProductDetails(fullVersion.getSku());

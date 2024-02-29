@@ -2,6 +2,7 @@ package net.osmand.plus.settings.purchase;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -74,6 +75,8 @@ public class PurchasesFragment extends BaseOsmAndDialogFragment implements InApp
 		List<InAppPurchase> mainPurchases = purchaseHelper.getEverMadeMainPurchases();
 		for (int i = 0; i < mainPurchases.size(); i++) {
 			themedInflater.inflate(R.layout.list_item_divider, cardsContainer);
+			InAppPurchase pu = mainPurchases.get(i);
+			Log.d("Purchase", "purchase time " + pu.getPurchaseTime());
 			PurchaseUiData purchase = PurchaseUiDataUtils.createUiData(app, mainPurchases.get(i));
 			PurchaseItemCard purchaseCard = new PurchaseItemCard(activity, purchaseHelper, purchase);
 			purchaseCard.setListener(PurchasesFragment.this);
