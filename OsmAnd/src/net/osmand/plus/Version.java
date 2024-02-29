@@ -164,7 +164,7 @@ public class Version {
 	}
 
 	public static boolean isDeveloperBuild(@NonNull OsmandApplication app) {
-		return getAppName(app).contains("~") && false;
+		return getAppName(app).contains("~");
 	}
 
 	public static boolean isTripltekBuild() {
