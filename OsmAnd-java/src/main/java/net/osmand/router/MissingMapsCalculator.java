@@ -48,34 +48,47 @@ public class MissingMapsCalculator {
 		reader = or.prepareFile();
 	}
 	
-	public boolean checkIfThereAreMissingMaps(RoutingContext ctx, LatLon start, List<LatLon> targets, boolean checkHHEditions)
+	public boolean checkIfThereAreMissingMaps(RoutingContext ctx, LatLon start, List<LatLon> targets, boolean checkHHEditions, HHRouteDataStructure.HHNetworkRouteRes res)
 			throws IOException {
 		long tm = System.nanoTime();
 		lastKeyNames = new ArrayList<String>();
 		List<Point> pointsToCheck = new ArrayList<>();
 		String profile = ctx.getRouter().getProfile().getBaseProfile(); // use base profile
 		Map<String, RegisteredMap> knownMaps = new TreeMap<>();
-		
-		for (BinaryMapIndexReader r : ctx.map.keySet()) {
-			RegisteredMap rmap = new RegisteredMap();
-			rmap.downloadName = Algorithms.getRegionName(r.getFile().getName());
-			rmap.reader = r;
-			rmap.standard = or.getRegionDataByDownloadName(rmap.downloadName) != null;
-			knownMaps.put(rmap.downloadName, rmap);
-			for (HHRouteRegion rt : r.getHHRoutingIndexes()) {
-				if (rt.profile.equals(profile)) {
-					rmap.edition = rt.edition;
-				}
+
+		List<LatLon> testObj = new ArrayList<>();
+		if (res != null) {
+			for (RouteSegmentResult r : res.detailed) {
+				LatLon l = new LatLon(MapUtils.get31LatitudeY(r.getObject().getPoint31YTile(0)),
+										MapUtils.get31LongitudeX(r.getObject().getPoint31XTile(0)));
+				testObj.add(l);
 			}
 		}
-		LatLon end = null;
-		for (int i = 0; i < targets.size(); i++) {
-			LatLon s = i == 0 ? start : targets.get(i - 1);
-			end = targets.get(i);
-			split(ctx, knownMaps, pointsToCheck, s, end);
-		}
-		if (end != null) {
-			addPoint(ctx, knownMaps, pointsToCheck, end);
+
+		if (testObj.size() == 0) {
+			/*for (BinaryMapIndexReader r : ctx.map.keySet()) {
+				RegisteredMap rmap = new RegisteredMap();
+				rmap.downloadName = Algorithms.getRegionName(r.getFile().getName());
+				rmap.reader = r;
+				rmap.standard = or.getRegionDataByDownloadName(rmap.downloadName) != null;
+				knownMaps.put(rmap.downloadName, rmap);
+				for (HHRouteRegion rt : r.getHHRoutingIndexes()) {
+					if (rt.profile.equals(profile)) {
+						rmap.edition = rt.edition;
+					}
+				}
+			}*/
+			LatLon end = null;
+			for (int i = 0; i < targets.size(); i++) {
+				LatLon s = i == 0 ? start : targets.get(i - 1);
+				end = targets.get(i);
+				split(ctx, knownMaps, pointsToCheck, s, end);
+			}
+			if (end != null) {
+				addPoint(ctx, knownMaps, pointsToCheck, end);
+			}
+		} else {
+			splitTest(ctx, knownMaps, pointsToCheck, testObj);
 		}
 		Set<String> mapsToDownload = new TreeSet<String>();
 		Set<String> mapsToUpdate = new TreeSet<String>();
@@ -203,6 +216,18 @@ public class MissingMapsCalculator {
 			split(ctx, knownMaps, pointsToCheck, s, mid);
 			split(ctx, knownMaps, pointsToCheck, mid, e);
 		}
+	}
+
+	private void splitTest(RoutingContext ctx, Map<String, RegisteredMap> knownMaps, List<Point> pointsToCheck, List<LatLon> testObj) throws IOException {
+		LatLon last = testObj.get(0);
+		addPoint(ctx, knownMaps, pointsToCheck, last);
+		for (LatLon l : testObj) {
+			if (MapUtils.getDistance(last, l) >= DISTANCE_SPLIT) {
+				addPoint(ctx, knownMaps, pointsToCheck, l);
+				last = l;
+			}
+		}
+		addPoint(ctx, knownMaps, pointsToCheck, testObj.get(testObj.size() - 1));
 	}
 
 	public void close() throws IOException {

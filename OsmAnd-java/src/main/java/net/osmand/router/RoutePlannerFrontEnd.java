@@ -3,13 +3,7 @@ package net.osmand.router;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 
@@ -48,6 +42,7 @@ public class RoutePlannerFrontEnd {
 	private HHRoutingConfig hhRoutingConfig = null;
 	private HHRoutingType hhRoutingType = HHRoutingType.JAVA;
 	private static MissingMapsCalculator missingMapsCalculator;
+	private String hhSelectedMaps;
 	
 
 	public RoutePlannerFrontEnd() {
@@ -851,6 +846,40 @@ public class RoutePlannerFrontEnd {
 		return res;
 	}
 
+	private void testMaps(String hhMaps, String missingMaps, LatLon start, LatLon end) {
+		System.out.println(missingMaps);
+		System.out.println(hhMaps);
+		String[] mmParts = missingMaps.split("\\[", -1);
+		mmParts = (mmParts[1]).split("\\]", -1);
+		mmParts = mmParts[0].split(", ");
+		String[] hhParts = hhMaps.split("\\[", -1);
+		hhParts = (hhParts[1]).split("\\]", -1);
+		hhParts = hhParts[0].split(", ");
+
+		List<String> notFound = new ArrayList<>();
+		for (String hh : hhParts) {
+			boolean found = false;
+			for (String mm : mmParts) {
+				if (hh.equals(mm)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				notFound.add(hh);
+			}
+		}
+
+		int dist = (int)MapUtils.getDistance(start, end) / 1000;
+		if (notFound.size() > 0) {
+			System.out.printf(">>>NOT FOUND: %s %.4f,%.4f %.4f,%.4f %d km\n", notFound.toString(), start.getLatitude(), start.getLongitude(),
+					end.getLatitude(), end.getLongitude(), dist);
+		} else {
+			System.out.println(">>>FOUND ALL: " + dist + "km");
+		}
+
+	}
+
 	public RouteCalcResult searchRoute(final RoutingContext ctx, LatLon start, LatLon end, List<LatLon> intermediates,
 	                                            PrecalculatedRouteDirection routeDirection) throws IOException, InterruptedException {
 		long timeToCalculate = System.nanoTime();
@@ -863,13 +892,16 @@ public class RoutePlannerFrontEnd {
 			targets.addAll(intermediates);
 		}
 		targets.add(end);
+		String missingMaps = "";
 		if (CALCULATE_MISSING_MAPS) {
 			if (missingMapsCalculator == null) {
 				missingMapsCalculator = new MissingMapsCalculator();
 			}
 			if (missingMapsCalculator.checkIfThereAreMissingMaps(ctx, start, targets,
-					hhRoutingConfig != null)) {
-				return new RouteCalcResult(missingMapsCalculator.getErrorMessage(ctx));
+					hhRoutingConfig != null, null)) {
+				System.out.println(missingMapsCalculator.getErrorMessage(ctx));
+				missingMaps = missingMapsCalculator.getErrorMessage(ctx);
+				//return new RouteCalcResult(missingMapsCalculator.getErrorMessage(ctx));
 			}
 		}
 		if (needRequestPrivateAccessRouting(ctx, targets)) {
@@ -879,6 +911,9 @@ public class RoutePlannerFrontEnd {
 			if (ctx.nativeLib == null || hhRoutingType == HHRoutingType.JAVA) {
 				HHNetworkRouteRes r = runHHRoute(ctx, start, targets);
 				if ((r != null && r.isCorrect()) || useOnlyHHRouting) {
+					ctx.getRouter().getProfile().toString();
+					missingMapsCalculator.checkIfThereAreMissingMaps(ctx, start, targets, true, r);
+					testMaps(missingMapsCalculator.getErrorMessage(ctx), missingMaps, start, targets.get(0));
 					return r;
 				}
 			} else {
